@@ -1,0 +1,12 @@
+node_modules
+.env
+.DS_Store
+dist
+build
+.next
+*.log
+package-lock.json
+frontend/node_modules
+backend/node_modules
+backend/.env
+frontend/.next
