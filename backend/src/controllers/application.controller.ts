@@ -31,7 +31,7 @@ export const submitApplication = async (req: Request, res: Response) => {
 
 export const getApplicationStatus = async (req: Request, res: Response) => {
   try {
-    const { studentId } = req.params;
+    const studentId = req.params.studentId as string;
     const application = await prisma.application.findUnique({
       where: { studentId },
       include: { interview: true },
