@@ -2,25 +2,14 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'AI Club Interview Portal',
-  description: 'Apply and interview with AI for our club.',
+  title: 'END LINE — 끝내자, 제대로.',
+  description: '남한고등학교 3학년 IT·AI 프로젝트 완성 동아리 엔드라인 지원 페이지',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body>
-        <div className="container">
-          <nav className="navbar">
-            <div className="logo">AI INTERVIEW</div>
-          </nav>
-          {children}
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

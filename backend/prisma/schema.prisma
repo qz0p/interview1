@@ -11,23 +11,24 @@ datasource db {
 }
 
 model Application {
-  id          String   @id @default(uuid())
-  studentId   String   @unique
-  name        String
-  phone       String
-  activities  String
-  plan        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isInterviewed Boolean @default(false)
-  interview   Interview?
+  id            String   @id @default(uuid())
+  phone         String   @unique
+  name          String
+  className     String
+  project       String
+  regret        String
+  goal          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  isInterviewed Boolean  @default(false)
+  interview     Interview?
 }
 
 model Interview {
   id            String      @id @default(uuid())
   applicationId String      @unique
   application   Application @relation(fields: [applicationId], references: [id])
-  qa            Json        // Store array of {question: string, answer: string}
+  qa            Json
   score         Int?
   feedback      String?
   createdAt     DateTime    @default(now())

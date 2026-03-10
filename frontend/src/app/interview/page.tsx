@@ -1,22 +1,28 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import styles from './page.module.css';
 
 function InterviewContent() {
   const searchParams = useSearchParams();
-  const studentId = searchParams.get('id');
-  
+  const phone = searchParams.get('phone');
+
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [questionCount, setQuestionCount] = useState(0);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!studentId) return;
+    if (!phone) return;
     startInterview();
-  }, [studentId]);
+  }, [phone]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   const startInterview = async () => {
     setLoading(true);
@@ -25,11 +31,12 @@ function InterviewContent() {
       const res = await fetch(`${apiUrl}/api/interviews/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId }),
+        body: JSON.stringify({ phone }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMessages([{ role: 'assistant', content: data.question }]);
+      setQuestionCount(1);
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -48,24 +55,22 @@ function InterviewContent() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const isLast = messages.length >= 9; // ~5 rounds of Q&A
+      const newCount = questionCount + 1;
+      const isLast = newCount > 5;
+
       const res = await fetch(`${apiUrl}/api/interviews/answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId,
-          qa: newMessages,
-          isFinished: isLast,
-        }),
+        body: JSON.stringify({ phone, qa: newMessages, isFinished: isLast }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
       if (isLast) {
         setFinished(true);
-        setResult(data);
       } else {
         setMessages([...newMessages, { role: 'assistant', content: data.question }]);
+        setQuestionCount(newCount);
       }
     } catch (err: any) {
       alert(err.message);
@@ -76,41 +81,54 @@ function InterviewContent() {
 
   if (finished) {
     return (
-      <div className="glass" style={{ textAlign: 'center' }}>
+      <div className={styles.done}>
+        <div className={styles.doneIcon}>✓</div>
         <h2>면접 완료!</h2>
-        <p>수고하셨습니다. 결과는 자동으로 기록되었습니다.</p>
-        <div style={{ marginTop: '2rem' }}>
-          <p>내 점수 (예상): {result?.score}</p>
-          <p>피드백: {result?.feedback}</p>
-        </div>
-        <button className="btn" onClick={() => window.location.href='/'}>홈으로 돌아가기</button>
+        <p>수고하셨습니다.<br />결과는 추후 개별 연락을 통해 알려드립니다.</p>
+        <a href="/" className={styles.backBtn}>처음으로</a>
       </div>
     );
   }
 
   return (
-    <div className="glass">
-      <h2>AI 면접 진행 중</h2>
-      <p>질문에 답변을 입력해 주세요.</p>
-      
-      <div className="chat-container">
-        {messages.map((m, i) => (
-          <div key={i} className={`message ${m.role === 'assistant' ? 'ai' : 'user'}`}>
-            {m.content}
-          </div>
-        ))}
-        {loading && <div className="message ai">생각 중...</div>}
+    <div className={styles.wrap}>
+      <div className={styles.header}>
+        <span className={styles.logo}>ENDLINE</span>
+        <span className={styles.progress}>{questionCount} / 5</span>
       </div>
 
-      <div className="input-area">
-        <input
-          type="text"
+      <div className={styles.chat}>
+        {messages.map((m, i) => (
+          <div key={i} className={`${styles.bubble} ${m.role === 'assistant' ? styles.ai : styles.user}`}>
+            {m.role === 'assistant' && <span className={styles.aiLabel}>AI 면접관</span>}
+            <p>{m.content}</p>
+          </div>
+        ))}
+        {loading && (
+          <div className={`${styles.bubble} ${styles.ai}`}>
+            <span className={styles.aiLabel}>AI 면접관</span>
+            <p className={styles.typing}>답변 생성 중...</p>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className={styles.inputArea}>
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="답변을 입력하세요..."
-          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+          rows={3}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
         />
-        <button className="btn" onClick={handleSend} disabled={loading}>전송</button>
+        <button onClick={handleSend} disabled={loading || !input.trim()}>
+          전송
+        </button>
       </div>
     </div>
   );
@@ -118,7 +136,7 @@ function InterviewContent() {
 
 export default function InterviewPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div style={{ color: '#fff', textAlign: 'center', padding: '2rem' }}>로딩 중...</div>}>
       <InterviewContent />
     </Suspense>
   );

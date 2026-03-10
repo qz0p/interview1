@@ -4,6 +4,6 @@ import { submitApplication, getApplicationStatus } from '../controllers/applicat
 const router = Router();
 
 router.post('/', submitApplication);
-router.get('/:studentId', getApplicationStatus);
+router.get('/:phone', getApplicationStatus);
 
 export default router;

@@ -2,18 +2,24 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import styles from './page.module.css';
 
 export default function HomePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    studentId: '',
-    name: '',
     phone: '',
-    activities: '',
-    plan: '',
+    name: '',
+    className: '',
+    project: '',
+    regret: '',
+    goal: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +35,9 @@ export default function HomePage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Submission failed');
+      if (!res.ok) throw new Error(data.error || '제출 실패');
 
-      alert('Application submitted! Now starting the interview.');
-      router.push(`/interview?id=${formData.studentId}`);
+      router.push(`/interview?phone=${encodeURIComponent(formData.phone)}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -41,68 +46,99 @@ export default function HomePage() {
   };
 
   return (
-    <main>
-      <div className="glass" style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>동아리 지원하기</h1>
-        <p style={{ textAlign: 'center' }}>AI 면접을 통해 당신의 열정을 보여주세요.</p>
+    <main className={styles.main}>
+      <div className={styles.hero}>
+        <div className={styles.badge}>남한고등학교 3학년 정규 동아리</div>
+        <h1 className={styles.title}>
+          END<span className={styles.accent}>LINE</span>
+        </h1>
+        <p className={styles.slogan}>끝내자, 제대로.</p>
+        <p className={styles.desc}>
+          1·2학년 때의 아쉬운 프로젝트를<br />3학년에서 완성으로 바꾸는 동아리
+        </p>
+      </div>
 
-        {error && <div style={{ color: 'var(--error)', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+      <div className={styles.card}>
+        <h2 className={styles.cardTitle}>동아리 지원서</h2>
+
+        {error && <div className={styles.error}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <label>학번</label>
-            <input
-              type="text"
-              required
-              value={formData.studentId}
-              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-              placeholder="예: 20240001"
-            />
+          <div className={styles.row}>
+            <div className={styles.field}>
+              <label>이름</label>
+              <input
+                type="text"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="홍길동"
+              />
+            </div>
+            <div className={styles.field}>
+              <label>반</label>
+              <input
+                type="text"
+                name="className"
+                required
+                value={formData.className}
+                onChange={handleChange}
+                placeholder="예: 3-2"
+              />
+            </div>
           </div>
 
-          <div className="input-group">
-            <label>이름</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-          </div>
-
-          <div className="input-group">
+          <div className={styles.field}>
             <label>전화번호</label>
             <input
               type="tel"
+              name="phone"
               required
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={handleChange}
               placeholder="010-0000-0000"
             />
           </div>
 
-          <div className="input-group">
-            <label>활동 이력 (자신이 활동한 내용 입력)</label>
+          <div className={styles.field}>
+            <label>1·2학년 때 진행한 프로젝트 소개</label>
             <textarea
+              name="project"
               required
               rows={4}
-              value={formData.activities}
-              onChange={(e) => setFormData({ ...formData, activities: e.target.value })}
+              value={formData.project}
+              onChange={handleChange}
+              placeholder="어떤 프로젝트였는지, 무엇을 만들었는지 설명해주세요."
             />
           </div>
 
-          <div className="input-group">
-            <label>동아리 계획</label>
+          <div className={styles.field}>
+            <label>아쉬웠던 점</label>
             <textarea
+              name="regret"
               required
-              rows={4}
-              value={formData.plan}
-              onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+              rows={3}
+              value={formData.regret}
+              onChange={handleChange}
+              placeholder="당시 프로젝트에서 아쉬웠거나 완성하지 못한 부분을 적어주세요."
             />
           </div>
 
-          <button type="submit" className="btn" style={{ width: '100%' }} disabled={loading}>
-            {loading ? '제출 중...' : '지원서 제출 및 면접 시작'}
+          <div className={styles.field}>
+            <label>3학년에서 이루고 싶은 목표</label>
+            <textarea
+              name="goal"
+              required
+              rows={3}
+              value={formData.goal}
+              onChange={handleChange}
+              placeholder="엔드라인에서 어떤 것을 완성하고 싶은지 적어주세요."
+            />
+          </div>
+
+          <button type="submit" className={styles.btn} disabled={loading}>
+            {loading ? '제출 중...' : '지원서 제출 및 AI 면접 시작 →'}
           </button>
         </form>
       </div>
